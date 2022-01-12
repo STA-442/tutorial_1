@@ -1,0 +1,496 @@
+---
+title: "R Refresher"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+The following short tutorial will serve as an R refresher. For a more in depth tutorial (see the R [studio gentle introduction to tidy statistics](https://www.rstudio.com/resources/webinars/a-gentle-introduction-to-tidy-statistics-in-r/)) 
+
+You can follow along by running each code chunk in your Rstudio session, or by running the code at the command line. 
+
+## The basics
+
+You can use R as a basic calculator to run some basic arithmetic
+
+```{r arithmetic}
+
+# Comments: R will not evaluate anything after (and on the same line) a #
+
+
+# addition
+print(1 + 1)
+
+# subtraction 
+print(10 -1)
+
+# multiplication
+print(2*3*4)
+
+# division
+print(2/4)
+
+# modulus 
+print(15 %% 6)
+
+# more complex arithmetic
+(1 + (2/(4-2)))^2
+```
+
+### Assignment
+
+You can create objects (variables) in R by assigning them a value with the `<-` operator. (Note: you can also use `=`, but many coding standards prefer if you use `<-`).
+
+The format is:
+
+`object_name` = `value`
+
+```{r assignment}
+
+# a variable x with the value 2
+x <- 2
+print(x)
+
+# change the value
+x <- 5
+print(x)
+
+# change again
+
+x <- x + 3*x
+print(x)
+
+```
+
+
+Object names must start with a letter and can only contain letters (upper and lowercase), numbers, periods (i.e. .), and underscores (i.e. _).
+
+proper variables:
+
+- x
+- my_var
+- myVar123
+- a_really_long_variable_name
+- a.variable.with.periods
+
+Bad variables:
+
+- 0var
+- not%a%legal%name
+- Variable*2
+
+I recommend choosing a standard format for variable names. For example, I prefer to use snake_case (e.g. `a_snake_case_variable`). I also recommend picking variables names with meaning. For example (`air_temp_celcius`, instead of `my_var`).
+
+In general, I follow Hadley Wickham's [style guide from advanced R](http://adv-r.had.co.nz/Style.html). 
+
+## Data Structures
+
+R comes with many data structures out of the box, but for our purposes, we will mainly use
+
+- Atomic vectors
+- Lists 
+- Data Frames
+
+### Atomic vectors
+
+Atomic vectors typically created using the `c()` function.
+
+```{r vectors}
+
+# a vector
+c(1, 2, 3)
+
+# another vector
+c(4, 2.5, -1, 17)
+
+# you can nest c() functions
+
+c(1, 2, 3)
+# same as
+c(1, c(2, 3))
+```
+
+You can subset or  a vector using bracket notation (i.e []). Indexing in R starts at 0
+
+```{r vectors2}
+
+# a vector
+x <- c(1, 2, 3)
+
+# the first element
+print(x[1])
+
+# the third element
+print(x[3])
+
+# the first two elements
+print(x[c(1, 2)])
+
+# use negation to select all but the indexes you negate
+print(x[-1])
+
+# add an element
+x[4] <- 15
+print(x)
+
+# remove an element
+x <- x[-4]
+
+
+```
+
+vectors must contain values all of the same type. R will use cohersion if possible to make sure the values have the same type 
+
+```{r cohersion}
+
+print(c(1, "hello", 2))
+
+print(c(TRUE, 2, 3))
+
+print(c(1, "2", FALSE))
+```
+
+
+### Lists
+
+Lists differ from vectors in that their elements can be of any type (including a list!). We create lists with the `list()` function.
+
+
+```{r lists}
+# a simple list
+my_list <- list(1, 2, 3)
+
+print(my_list)
+
+# list with a list in its third element
+my_other_list <- list(1, 2, list(3))
+print(my_other_list)
+```
+
+You can subset lists double brackets (i.e. [[]]). For example
+
+```{r list_subset}
+my_list <- list(1, c("hello", "goodbye"), 3)
+
+# the first element
+print(my_list[[1]])
+
+# the second element
+print(my_list[[2]])
+
+# You can subset elements withing subsets with bracket notation
+print(my_list[[2]][1])
+print(my_list[[2]][2])
+```
+
+It is common to name list elements. You can then subset lists using either bracket notation or dollar sign notation
+
+```{r names_list}
+
+l <- list(name = c("Frank", "Amy"), salary = c(60000, 65000), union = c(T, T))
+print(l)
+
+# subset using names
+l[["name"]]
+
+# subset using dollar sign notation
+l$name
+
+# same subset using the index position
+l[[1]]
+```
+
+Lists are extremely flexible, and are used extensively in common data analysis tasks. We will see and use lists throughout this course. 
+
+
+## Data Frames 
+
+Perhaps the most common object that we will see in this course is the data frame (`data.frame`). 
+
+Intuitively data frames are like matrices - they have two dimensions, rows and columns. Each column in a data frame must have values of the same type (e.g. all character values, or all numeric values). We typically think of the columns in a data frame as variables and the rows as observations. We can create a data frame with the `data.frame()` function.
+
+Common functions used to explore data frames using base R include (`str()`, look at the structure, `head()` see the first few observations, `dim()` the dimensions, `nrow()` number of rows, `ncol()` number of columns). 
+
+Just like with vectors and lists, we can extract or subset values from a `data.frame`
+
+```{r dataframe}
+
+df <- data.frame(
+  x = c(1, 2, 3, 4, 5, 6, 7, 8),
+  y = c("a", "b", "c", "d", "e", "f", "g" , "h"),
+  z = c(T, T, F, F, F, T, F, F)
+)
+
+# look at the first 6 observations
+head(df)
+
+# look at the structure
+str(df)
+
+# the dimensions
+dim(df)
+
+# the number of columns
+ncol(df)
+
+# the number of rows
+nrow(df)
+
+# the element from the first row and column
+df[1, 1]
+
+# leaving either the row or column index blank will pull the entire row or column
+
+# the entire first row
+df[1,]
+
+# the entire first column
+df[,1]
+
+# the 1st 3rd and 7th row
+df[c(1, 3, 7),]
+
+# we can also use the dollar sign notation
+# print the x variable
+print(df$x)
+
+# print the third element from the x variable
+print(df$x[3])
+```
+
+
+
+## Functions
+
+The base R language itself is equipped with thousands of useful functions out of the box. We have made use of some of these functions already (`head()`, `dim()`, `c()`). Even the arithmetic operators we have used are function (`+`, `-`, `*`, etc...). 
+
+We often want to extend R's base functionality by writing functions ourselves. This is create practice to help you automate tasks and create pieces of reusable code that can be applied accross projects. You can create a function in R with the use of the `function` keyword, and assigning it to some named object.
+
+For example, say we wanted to write a function to calculate the sample mean for a vector of observed values (R comes with such a function out of the box `mean()`)
+
+```{r example_function}
+
+# function to calculate the sample mean
+calculate_mean <- function(x) {
+  
+  mean_value <- sum(x)/length(x)
+  
+  return(mean_value)
+  
+}
+
+# try out the function
+calculate_mean(c(2, 3, 6, 7, 8))
+
+# compare to the function that comes with R
+# Not the use of double equal signs to test equality
+mean(c(2, 3, 6, 7, 8)) == calculate_mean(c(2, 3, 6, 7, 8))
+```
+
+The above function has a name (`equality_mean`), a body (the code between the curly braces), and arguments or formals (in this case x). If we try to run our function without passing any data, it will throw an error since x does not exist. If we wanted to, we could give our function some default values by assigning them when we create the function. For example
+
+```{r example_function2}
+
+# function to calculate the sample mean with default value of zero
+calculate_mean <- function(x = c(0)) {
+  
+  mean_value <- sum(x)/length(x)
+  
+  return(mean_value)
+  
+}
+
+# try out the function
+calculate_mean()
+```
+
+Functions and functional programming is a HUGE part of applied statistics and data analysis. The section above serves as a simple reminder for how to write functions. We will certainly write much more complex functions throughout this course. For an excellent and advanced treatment of function, read the 4th chapter of Hadley Wickham's advanced R book ([found here](http://adv-r.had.co.nz/Functions.html)). 
+
+## Packages
+
+When R users or developers write enough useful code that they wish to share, they package the code together into what is known as an R package. Packages that meet certain standards are available on the Comprehensive R Archive Network (or CRAN). [Here](https://cran.r-project.org/web/views/) you can find list of the many commonly available packages by subject matter or area of application. 
+
+To install a package from cran you use the `install.packages()` function. Once a package is installed, you can use the `library()` function. 
+
+## The tidyverse
+
+The tidyverse is a collection of packages designed with the practical data science workflows in mind. In particular, they make data cleaning and modeling tasks a snap. For a detailed treatment of the comment data wrangling tasks with the tidyverse, see [chapters 9-16 of R the free R for Data Science book](https://r4ds.had.co.nz/wrangle-intro.html).
+
+Here, we will cover a few important concepts that we will use frequently - `tibbles` (a new kind of data.frame), typical data manipulation functions (`select`, `slice`, `filter`, `group_by`, and `summarize`) and the pipe operator (`%>%`).
+
+
+### Tibbles
+
+Tibbles are nothing more than a `data.frame` with slightly different behaviour to make life a little easier. 
+
+From R for Data Science:
+
+>If you’re already familiar with data.frame(), note that tibble() does much less: it never changes the type of the inputs (e.g. it never converts strings to factors!), it never changes the names of variables, and it never creates row names.
+
+The added beneficial behaviour from tibbles comes from its printing methods and data extraction methods. Below we will make use of the `mtcars` data.frame that comes preloaded with R
+
+```{r tibbles}
+# load the tidyverse
+library(tidyverse)
+
+# assign the mtcars data.frame to an object named df
+df <- mtcars
+
+# what type of 
+class(df)
+
+# convert to a tibble
+
+df_tibble <- as_tibble(df)
+
+# nice printing behaviour
+print(df_tibble)
+
+# we can extract variables in one of three 
+
+# dollar sign (first 5 observations)
+df_tibble$mpg[1:5]
+
+# extract by name (first 5 observations)
+df_tibble[["mpg"]][1:5]
+
+# Extract by position
+df_tibble[[1]][1:5]
+
+
+
+```
+### Common data cleaning tasks
+
+For those of you familiar with SQL, you may be comfortable writing queries to select, manipulate, and summarize data. The tidyverse (`dplyr` in particular), has attempted (and succeeded), to port this simple/flexible set of techniques over to R. Many of the most common data manipulation techniques can be boiled down to a set of verbs:
+
+- `select()` - for selecting variables from a data set
+- `filter()` - for subsetting data based on some logical conditions
+- `slice()` - for selecting rows based on indexes
+- `mutate()` - for creating new variables
+- `summarize()` - for creating numeric data summaries
+- `group_by()` - for doing any of the above using subgroups within the data
+
+Let's look at some examples below using the mtcars data we loaded earlier. Each of the above functions takes data as the first argument followed typically by some logical expression, or tidy select statement, or more general functions to create variables. 
+
+```{r tidyverse}
+
+
+##########################
+# SELECT
+
+# select a few variables
+select(df_tibble, mpg, cyl)
+
+# select the first 3 variables
+select(df_tibble, 1:3)
+
+# select variables that start with the letter c
+select(df_tibble, starts_with("c"))
+
+##########################
+# FILTER
+
+# select rows where gear == 4
+filter(df_tibble, gear == 4)
+
+# select rows where gear < 5 and cyl == 6
+filter(df_tibble, gear < 5 & cyl == 6)
+
+##########################
+# SLICE
+
+# select the first third and fifth rows
+slice(df_tibble, 1, 3, 35)
+
+
+##########################
+# MUTATE
+
+# create a categorical mpg_cat that is low when mpg < 19 and high otherwise
+
+mutate(df_tibble, mpg_cat = ifelse( mpg < 19, "low", "high"))
+
+##########################
+# SUMMARIZE
+
+# calculate the average mpg
+summarize(df_tibble, mean_mpg = mean(mpg))
+
+```
+
+
+The beauty of dplyr is that we often want to chain several of these statements together. For example, we want to select hp, mpg and cyl,filter for hp > 65, and calculate the average mpg for each cyl level.
+
+
+```{r}
+
+summarize(group_by(filter(select(df_tibble, mpg, hp, cyl), hp > 50), cyl), 
+          mean_mpg = mean(mpg) )
+
+```
+
+Now, you may say, I thought you said there was some beauty here and the above code is confusing as heck.  To make your R code a little easier to organize and read, we have the pipe operator, %>% from the magrittr package (loads as part of the tidyverse/dplyr). The pipe operator takes the result of any operation on the left side of it and makes places it as the first argument of what is on the right side of it. For example the above could be written as
+
+```{r}
+
+df_tibble %>% 
+  select(mpg, hp, cyl) %>% 
+  filter(hp > 50) %>% 
+  group_by(cyl) %>% 
+  summarize(mean_mpg = mean(mpg))
+
+```
+
+That looks much nicer. So what is the pipe operator doing?
+
+It's simply takes whatever is on the left side of the operator and makes it the first argument of whatever function is on the right side of the operator. Let's break down the above.
+
+The first operation looks like `df_tibble %>% select(mpg, hp, cyl)`: This means take the `df_tibble` and make it the first argument of the select function. This is the same as writing `select(df_tibble, mpg, hp, cyl)`. 
+
+Then we have another pipe operator followed by `filter(hp > 50)`. This means take the result of `df_tibble %>% select(mpg, hp, cyl)` and make it the first argument of the filter function. Therefore, this is the same as `filter(select(df_tibble, mpg, hp, cyl), hp > 50)`.
+
+Then we have another pipe operator followed by `group_by(cyl)`. So we simply take the previous result and make it the first argument of the group_by function. That means, it is the same as `group_by(filter(select(df_tibble, mpg, hp, cyl), hp > 50), cyl)`.
+
+Then we have a final pipe operator followed by a summarize function. So as we have been doing, we take our previous result and make it the first argument of the summarize function. This becomes `summarize(group_by(filter(select(df_tibble, mpg, hp, cyl), hp > 50), cyl),mean_mpg = mean(mpg))`.
+
+So this last ugly expression is the same as the nice piped out expression above. Using the pipe operator makes your code much easier to read. You can read the code one line at a time. Let's look at the pipe expression code and see how we would read it.
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r, eval=F }
+
+# take our data 
+df_tibble %>% 
+  # and select these 3 variables
+  select(mpg, hp, cyl) %>% 
+  # and then filter for hp > 50
+  filter(hp > 50) %>% 
+  # and then group by the cyl variable
+  group_by(cyl) %>% 
+  # and then calculate the mean mpg
+  summarize(mean_mpg = mean(mpg))
+
+
+
+```
+
+This can be confusing at first, but becomes second nature after you have worked with it a few times. For more information see the [pipe section of the R for data science book](https://r4ds.had.co.nz/pipes.html) 
+
+
+
+

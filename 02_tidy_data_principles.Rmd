@@ -1,0 +1,188 @@
+---
+title: "Tidy Data"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+In this document we will get some experience with tidy data techniques, using some functions from the `tidyverse`. We will walk through several examples and then leave a couple for exercises on your own time. First we will load the tidyverse package:
+
+```{r load}
+
+# Load the required libraries
+library(tidyverse)
+```
+
+### Issue 1: Column headers are values, not variables
+
+In this first example we will look at a data set where the names of the variables store data values. The data files (called `relig_income.csv`) is stored in the data folder. 
+
+```{r }
+# read in the data
+relig_income <- read_csv('data/relig_income.csv')
+
+# have a look at the first observations
+head(relig_income)
+
+# what are the variable names
+names(relig_income)
+```
+
+Remember that there are 3 rules for data to be considered tidy:
+
+1. Each variable must have its own column.
+2. Each observation must have its own row.
+3. Each value must have its own cell.
+
+The names of the columns in this case are values from a variable, so they should be stored in their own cell. 
+
+We can use the pivot_longer function from the `tidyr` package (part of the tidyverse) to transform this data into its proper form. 
+
+using the pivot_longer function we:
+  - specify that we want to pivot all columns except for religion
+  - want the names of those specified variables to become a new column called income
+  - want the values from each of those columns to become a new variable called count
+
+The choice of calling the names_to variable "income" and the values_to variable "count" are arbitrary. 
+
+```{r}
+relig_income_tidy <- relig_income %>% 
+  pivot_longer(-religion, 
+               names_to = "income",
+               values_to = 'count')
+head(relig_income_tidy)
+```
+
+
+
+### Issue 2: Column headers are values, not variables
+
+For this example we will use a data set showing which songs from artists that reached the billboard top 100 (a list of the most popular songs). Each row of the data displays an artist and a track from that artist, while the remaining columns show the top 100 ranking for each week from week 1 to week 76. For example, the column named `wk1`, shows the songs rank when it first entered the top 100, and the column `wk76` shows the songs rank in the top 100 at it's 76th week. When a song falls out of the top 100, it receives a value of NA for these columnes (weeks) 
+
+
+This example is similar to the first example in that the columns are values from a variable (week). We should similarly pivot this data to a longer data frame. 
+
+
+```{r}
+# read in the data
+
+billboard <- read_csv('data/billboard.csv')
+
+# first pivot the data to a long format
+billboard_pivot <- billboard %>% 
+  pivot_longer(wk1:wk76, 
+               names_to = "week",
+               values_to = "rank", 
+               values_drop_na = T) 
+
+# have a look at the tranformed data
+head(billboard_pivot)
+```
+
+Notice how we used a slightly different method for selecting the variablese to pivot. Instead of selecting which variables we don't want to pivot (as in the previous example with `-religion`), we say we want to pivot all variables from `wk1` to `wk76`.
+
+The data is tranformed, but we should probably clean up some of these variables. We will make the week variable numeric, and then calculate a date since the artist entered the top 100, by adding the week total to the date entered variable. 
+
+```{r}
+billboard_tidy <- billboard_pivot%>% 
+  # transform the week variable to numeric by removing 'wk'
+  mutate(week = as.numeric(gsub('wk', '', week)),
+         date = as.Date(date.entered) + 7*(week - 1)) %>% 
+  arrange(artist, track, week)
+
+head(billboard_tidy)
+```
+
+
+### Issue 2: Multiple variables stored in one column
+
+This dataset comes from the World Health Organisation, and records the counts of confirmed tuberculosis cases by country, year, and demographic group. The demographic groups are broken down by sex (m, f) and age (0-14, 15-25, 25-34, 35-44, 45-54, 55-64, unknown).
+
+
+
+
+# A row in the current format stores data for every available age/gender combination
+# A tidy row observation should represent a single country, year, age/gender
+
+```{r}
+tb <- read_csv( 'data/tb.csv')
+head(tb)
+
+```
+
+Each variable name is storing information for two groups (an age and gender). We can, as before, pivot the current column names into their own variable, and then split them into two separate columns (one for age and one for gender.)
+
+
+
+
+```{r}
+tb_pivot <- tb %>% 
+  pivot_longer(-c(iso2, year), 
+               names_to = "age_sex",
+               values_to = 'count', 
+               values_drop_na = T) 
+head(tb_pivot)
+
+```
+we use pivot_longer and choose to pivot every column except iso2 and year. We move the names of the pivoted columns to a variable named age_sex and their values to a variable named count. We also drop any missing values.
+ 
+This looks great, but we are still violating a tidy data principle (Each value must have its own cell). The age_sex variable contains data for a region's age and sex. we can split this data apart quite easily by noticing that the first character in each age_sex value is the gender while the remaining values represent the age groupings. We can use `str_sub` for this purpose
+
+```{r}
+tb_tidy <- tb_pivot %>% 
+  mutate(gender = str_sub(age_sex, 1, 1),
+         age = str_sub(age_sex, 2, -1)) %>% 
+  select(-age_sex)
+
+head(tb_tidy)
+
+```
+
+Type `?str_sub` at the command line for more information on how this function works. 
+
+### Issue 4: Variables are stored in both rows and columns
+
+For this example we will be using some weather radar data. 
+```{r}
+# read in the weather data
+weather <- read_csv('data/weather.csv')
+
+# have a look at the first few observations
+head(weather)
+
+
+```
+
+An observation in the raw data stores the maximum temperature or minimum temperature for a weather radar for every day of a month. The column names d1 to d31 represent the 31 days in a month. For a given radar (e.g. `id = "MX17004"`), there will be two rows of data for a given month - one for the maximum temperatures for each day of the monthh (`element = tmax`) and one for the minimum temperatures for the month (`element = tmin`).
+
+In a tidy version of this data, a single row will have the minimum and maximum weather observations for a single day, month, year. 
+
+Let's begin by pivoting the `d1` to `d31` variables. We `pivot_longer` and `select` the day columns (`d1` to `d31`) and we move the names of those columns to a variable called
+ 'day' and we move their values to a variable called `temp`.
+
+```{r}
+weather_pivot <- weather %>% 
+  pivot_longer(d1:d31, 
+               values_drop_na = T,
+               names_to = "day",
+               values_to = "temp") 
+head(weather_pivot)
+```
+
+This is great, except we can further tidy by putting the values of the element column into their own columns.
+
+Below, we then use `pivot_wider` (the counterpart to `pivot_longer`) to to collapse the minimum and maximum temperature rows into a single row. We collapse the values from the `element` variable which are either "tmax" or "tmin" into two new variables called `tmax` and `tmin.` We use the values from the `temp` variable to populate `tmax` and `tmin`.
+
+```{r}
+weather_tidy <- weather_pivot %>% 
+  # transform day variable to numeric
+  mutate(day = as.numeric(gsub('d', '', day))) %>% 
+  pivot_wider(names_from = "element",
+              values_from = "temp")
+
+```
+
