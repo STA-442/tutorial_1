@@ -1,0 +1,55 @@
+---
+title: "My Parametrized Report"
+output: html_document
+params:
+  author_name: "Your Name"
+  nameTeam: "Toronto Raptors"
+  include_plots: TRUE
+  season_name: "2019-20"
+  data_filename: "data/nba_results2020.csv"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=F, message=F)
+```
+
+## Parameterized Report
+
+In this report, we will summarize the season results for `r params$nameTeam`.
+
+```{r}
+# load the tidyverse
+library(tidyverse)
+
+# load the data
+df <- read_csv(params$data_filename)
+
+# filter the data for the input team
+
+df_filter <- df %>% 
+  filter(nameTeam == params$nameTeam)
+```
+
+For the `r params$season_name`, the `r params$nameTeam` had `r sum(df_filter$isWin)` wins and `r sum(df_filter$isWin == F)` losses. 
+
+### Descriptive statistics
+
+The following table summarizes the teams mean performance over the course of the season
+
+```{r}
+df_filter %>% 
+  summarize_at(vars("ptsTeam", "astTeam", "plusminusTeam"), funs(mean,sd)) %>% 
+  knitr::kable()
+
+
+if(params$include_plots) {
+  df_filter %>% 
+    ggplot(aes(ptsTeam)) +
+    geom_density() +
+    ggtitle(paste('Number of points scored by ', params$nameTeam),
+            subtitle = paste("In the ", params$season_name, " Season")) +
+    xlab("Total points in Game")
+  
+}
+```
+
